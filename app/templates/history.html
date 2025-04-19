@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<main>
+    <h1>Historical Sensor Data</h1>
+    <div class="filter-container">
+        <form method="get">
+            <label for="start_date">From:</label>
+            <input type="date" id="start_date" name="start" value="{{ start_date or '' }}" max="{{ datetime.now().strftime('%Y-%m-%d') }}">
+            <label for="end_date">To:</label>
+            <input type="date" id="end_date" name="end" value="{{ end_date or '' }}" max="{{ datetime.now().strftime('%Y-%m-%d') }}">
+            <button type="submit">Apply Filter</button>
+        </form>
+    </div>
+
+    {% if data %}
+    <div class="chart-grid">
+        <div class="chart-container">
+            <canvas id="tempChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="pressureChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="phChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="humidityChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="lightChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="airQualityChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="moistureChart"></canvas>
+        </div>
+    </div>
+    {% else %}
+    <p>No historical data available for the selected date range.</p>
+    {% endif %}
+
+    <div class="back-button-container">
+        <a href="{{ url_for('dashboard') }}" class="nav-button">Back to Dashboard</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script>
+        renderCharts({{ data|tojson }});
+    </script>
+</main>
+{% endblock %}

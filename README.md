@@ -1,1 +1,1 @@
-# Greenhouse Solution to show issues of sensors in the greehouses
+# Greenhouse Solution to show issues of sensors in the greenhouses for proper monitoring

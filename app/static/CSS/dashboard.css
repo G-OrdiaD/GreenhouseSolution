@@ -1,0 +1,250 @@
+:root {
+  --grass: #4CAF50;
+  --teal: #008080;
+  --teal-dark: #006666;
+  --black: #222222;
+  --grey: #e0e0e0;
+  --white: #ffffff;
+  --cream: #FAF0E6;
+  --warning-red: #d32f2f;
+  --warning-orange: #ff9800;
+}
+
+/* BASE STYLES */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--cream);
+  color: var(--black);
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+
+/* LAYOUT CONTAINERS */
+.dashboard-container,
+.history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* background-color: var(--cream); Removed redundant background */
+}
+
+/* DATA DISPLAY STYLES */
+.data-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.data-item {
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.3s ease;
+}
+
+.data-item:hover {
+  transform: translateY(-5px);
+}
+
+/* CHART STYLES */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.chart-container {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+
+/* TABLE STYLES */
+table {
+  width: 80%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: var(--white);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+th {
+  background-color: var(--grey);
+  color: var(--black);
+  padding: 15px 10px;
+  text-align: center;
+  border-right: 1px solid var(--black);
+  font-weight: 600;
+}
+
+td {
+  padding: 12px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--grey);
+  border-right: 1px solid var(--black);
+}
+
+th:first-child,
+td:first-child {
+  border-left: none;
+}
+
+th:last-child,
+td:last-child {
+  border-right: none;
+}
+
+tbody tr:last-child td {
+  border-bottom: 2px solid var(--teal);
+}
+
+
+/* FORM CONTROLS */
+.history-controls {
+  background: var(--white);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+}
+
+.date-filter-form {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+/* ==================== */
+/* BUTTONS & NAVIGATION */
+/* ==================== */
+.nav-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: var(--teal);
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  margin: 20px 0;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.nav-button:hover {
+  background-color: var(--teal-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.filter-button {
+  padding: 10px 15px;
+}
+
+.export-btn {
+  background: var(--teal);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+  background: var(--teal-dark);
+}
+
+/* ==================== */
+/* STATUS INDICATORS */
+/* ==================== */
+.status-open {
+  color: var(--warning-red);
+  font-weight: bold;
+}
+
+.status-undergoing-fixing {
+  color: var(--warning-orange);
+  font-weight: bold;
+}
+
+.status-resolved {
+  color: var(--grass);
+  font-weight: bold;
+}
+
+.value-warning {
+  color: var(--warning-red);
+  font-weight: bold;
+  animation: pulse 1s infinite;
+}
+
+/* ==================== */
+/* ANIMATIONS */
+/* ==================== */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* ==================== */
+/* RESPONSIVE DESIGN */
+/* ==================== */
+@media (max-width: 768px) {
+  .data-container,
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  table {
+    width: 100%;
+    display: block;
+    overflow-x: auto;
+  }
+
+  .date-filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-group {
+    min-width: auto;
+  }
+}
