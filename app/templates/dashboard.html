@@ -1,33 +1,67 @@
 {% extends "base.html" %}
 {% block content %}
 <main>
-    <h1>Current Sensor Data</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Temperature</th>
-                <th>Humidity</th>
-                <th>Light Intensity</th>
-                <th>Pressure</th>
-                <th>Air Quality</th>
-                <th>pH</th>
-                <th>Moisture</th>
-                <th>Last Updated</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ data.temperature if data and 'temperature' in data else '--' }} °C</td>
-                <td>{{ data.humidity if data and 'humidity' in data else '--' }} %</td>
-                <td>{{ data.light_intensity if data and 'light_intensity' in data else '--' }} lux</td>
-                <td>{{ data.pressure if data and 'pressure' in data else '--' }} hPa</td>
-                <td>{{ data.air_quality if data and 'air_quality' in data else '--' }} scale</td>
-                <td>{{ data.pH if data and 'pH' in data else '--' }} acidity</td>
-                <td>{{ data.moisture if data and 'moisture' in data else '--' }} %</td>
-                <td>{{ data.timestamp if data and 'timestamp' in data else '--' }}</td>
-            </tr>
-        </tbody>
-    </table>
-    <a href="{{ url_for('history') }}" class="nav-button">View Historical Data</a>
+    <h1>DASHBOARD</h1>
+
+    <nav>
+        <a href="{{ url_for('dashboard') }}" class="nav-button">Dashboard</a>
+        <a href="{{ url_for('history') }}" class="nav-button">View Historical Data</a>
+        <a href="{{ url_for('settings') }}" class="nav-button">Alert Settings</a> </nav>
+
+    <section class="latest-data">
+        <h2>Current Sensor Data</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Light Intensity</th>
+                    <th>Pressure</th>
+                    <th>Air Quality</th>
+                    <th>pH</th>
+                    <th>Moisture</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ data.temperature if data and 'temperature' in data else '--' }} °C</td>
+                    <td>{{ data.humidity if data and 'humidity' in data else '--' }} %</td>
+                    <td>{{ data.light_intensity if data and 'light_intensity' in data else '--' }} lux</td>
+                    <td>{{ data.pressure if data and 'pressure' in data else '--' }} hPa</td>
+                    <td>{{ data.air_quality if data and 'air_quality' in data else '--' }} scale</td>
+                    <td>{{ data.pH if data and 'pH' in data else '--' }} acidity</td>
+                    <td>{{ data.moisture if data and 'moisture' in data else '--' }} %</td>
+                    <td>{{ data.timestamp if data and 'timestamp' in data else '--' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="active-alerts">
+        <h2>Active Alerts</h2>
+        {% if alerts %}
+        <ul>
+            {% for alert in alerts %}
+            <li>
+                <strong>{{ alert.sensor_type|capitalize }}</strong>:
+                Reading {{ alert.reading_value }} breached
+                {% if alert.threshold_type == 'min' %}
+                    minimum threshold of {{ alert.threshold_value }}
+                {% else %}
+                    maximum threshold of {{ alert.threshold_value }}
+                {% endif %}
+                at {{ alert.timestamp }}
+                {% if alert.status %}
+                <span class="alert-status {{ alert.status|lower }}">{{ alert.status|capitalize }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No active alerts reported.</p>
+        {% endif %}
+    </section>
+
 </main>
 {% endblock %}

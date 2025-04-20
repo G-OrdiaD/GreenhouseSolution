@@ -11,15 +11,17 @@ def dashboard():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # Fetch the latest sensor reading
         cursor.execute("SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 1")
-        data = cursor.fetchone()
+        latest_data = cursor.fetchone() or {}
 
-        cursor.execute("SELECT * FROM issues WHERE status != 'resolved' ORDER BY timestamp DESC")
-        issues = cursor.fetchall()
+        # Fetch active alerts (assuming you might want a status column later)
+        cursor.execute("SELECT * FROM alerts ORDER BY timestamp DESC")
+        active_alerts = cursor.fetchall()
 
         return render_template('dashboard.html',
-                               data=data or {},
-                               issues=issues)
+                               data=latest_data,
+                               alerts=active_alerts)  # Pass the active alerts to the template
     except Exception as e:
         app.logger.error(f"Dashboard error: {e}")
         return render_template('error.html')
@@ -73,3 +75,47 @@ def history():
 @app.errorhandler(500)
 def internal_error(error):
     return "An internal error occurred. Please try again later.", 500
+
+ADMIN_USERS = {'Manager'}  # Replace with your actual admin usernames
+
+def is_admin():
+    current_user = 'Manager'  #replace with actual user retrieval
+    return current_user in ADMIN_USERS
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    if not is_admin():
+        return "Unauthorized Access", 403  # Or redirect to an error page
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        if request.method == 'POST':
+            updated_thresholds = request.form
+
+            for parameter, value in updated_thresholds.items():
+                if parameter.endswith('_min'):
+                    sensor = parameter[:-4]
+                    min_value = value
+                    cursor.execute("UPDATE optimal_ranges SET min_value = %s WHERE parameter = %s", (min_value, sensor))
+                elif parameter.endswith('_max'):
+                    sensor = parameter[:-4]
+                    max_value = value
+                    cursor.execute("UPDATE optimal_ranges SET max_value = %s WHERE parameter = %s", (max_value, sensor))
+            conn.commit()
+            return redirect(url_for('settings'))  # Redirect to refresh the page
+
+        # Fetch current thresholds for display
+        cursor.execute("SELECT parameter, min_value, max_value FROM optimal_ranges")
+        thresholds = {row['parameter']: row for row in cursor.fetchall()}
+
+        return render_template('settings.html', thresholds=thresholds)
+
+    except Exception as e:
+        app.logger.error(f"Settings error: {e}")
+        return render_template('error.html')
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
