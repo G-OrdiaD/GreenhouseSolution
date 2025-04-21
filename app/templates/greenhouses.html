@@ -1,10 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<main>
+    <h1>Greenhouses</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <p><a href="{{ url_for('add_greenhouse') }}" class="button">Add New Greenhouse</a></p>
+    {% if greenhouses %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for greenhouse in greenhouses %}
+                    <tr>
+                        <td>{{ greenhouse.name }}</td>
+                        <td>{{ greenhouse.location or '-' }}</td>
+                        <td>{{ greenhouse.description or '-' }}</td>
+                        <td><a href="#">Manage Assignments</a></td> </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No greenhouses have been added yet.</p>
+    {% endif %}
+    <div class="back-button-container">
+        <a href="{{ url_for('dashboard') }}" class="nav-button">Back to Dashboard</a>
+    </div>
+</main>
+{% endblock %}

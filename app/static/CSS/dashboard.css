@@ -249,3 +249,140 @@ tbody tr:last-child td {
     min-width: auto;
   }
 }
+/* In your dashboard.css or login.css */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    width: 350px; /* Set a fixed width to prevent stretching */
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.login-form div {
+    margin-bottom: 15px;
+}
+
+.login-form label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    color: var(--black);
+    font-weight: bold;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 100%; /* Make input take full width of its container */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+.login-form button {
+    padding: 10px 15px;
+    background-color: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+}
+
+.login-form button:hover {
+    background-color: var(--teal-dark);
+}
+
+.login-form .links {
+    margin-top: 20px;
+    text-align: center; /* Center the links */
+}
+
+.login-form .links p {
+    margin-bottom: 5px; /* Add some spacing between the links */
+}
+
+.login-form .links a {
+    text-decoration: none;
+    color: var(--teal);
+    margin: 0 10px;
+}
+
+.login-form h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--black);
+}
+
+.registration-form {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    width: 350px; /* Adjust width as needed for more fields */
+    margin: 20px auto; /* Center the form horizontally */
+    padding: 20px;
+    border: 1px solid #ccc; /* Optional border */
+    border-radius: 5px; /* Optional rounded corners */
+    background-color: #f9f9f9; /* Optional background color */
+}
+
+.registration-form div {
+    display: flex;
+    justify-content: space-between; /* Space out label and input */
+    align-items: center; /* Vertically align label and input */
+    margin-bottom: 10px; /* Spacing between form groups */
+}
+
+.registration-form label {
+    flex-basis: 40%; /* Adjust label width */
+    text-align: left;
+    padding-right: 10px;
+}
+
+.registration-form input[type="text"],
+.registration-form input[type="email"],
+.registration-form input[type="tel"],
+.registration-form input[type="password"] {
+    flex-basis: 60%; /* Adjust input width */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-sizing: border-box; /* Prevent padding from increasing input width */
+}
+
+.registration-form button {
+    padding: 10px 15px;
+    background-color: var(--teal); /* Use your theme color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    margin-top: 15px; /* Space from the input fields */
+}
+
+.registration-form button:hover {
+    background-color: var(--teal-dark); /* Darker shade on hover */
+}
+
+.registration-form .links {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.registration-form .links a {
+    text-decoration: none;
+    color: var(--teal); /* Use your theme color */
+    margin: 0 10px;
+}
+
+.registration-form h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--black); /* Use your theme color */
+}

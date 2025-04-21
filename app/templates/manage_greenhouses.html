@@ -1,10 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
+<main>
+    <form method="POST" action="{{ url_for('add_greenhouse') }}" class="registration-form">
+        <h1>Manage Greenhouses</h1>
+        <h2>Add New Greenhouse</h2>
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+            <label for="location">Location:</label>
+            <input type="text" id="location" name="location">
+        </div>
+        <div>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description"></textarea>
+        </div>
+        <button type="submit">Add Greenhouse</button>
+    </form>
 
-</body>
-</html>
+    <hr style="width: 80%; margin: 20px auto;">
+
+    <h2>Existing Greenhouses</h2>
+    {% if greenhouses %}
+        <table style="width: 80%; margin: 20px auto;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for greenhouse in greenhouses %}
+                    <tr>
+                        <td>{{ greenhouse.name }}</td>
+                        <td>{{ greenhouse.location or '-' }}</td>
+                        <td>{{ greenhouse.description or '-' }}</td>
+                        <td><a href="#">Manage Assignments</a></td>
+                    </tr>
+                {% endfor %}  </tbody>
+        </table>
+    {% else %}
+        <p style="text-align: center;">No greenhouses have been added yet.</p>
+    {% endif %}
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{{ url_for('dashboard') }}" class="nav-button">Back to Dashboard</a>
+    </div>
+
+    {% if messages %}
+        <div class="messages" style="margin-top: 20px; text-align: center;">
+            {% for category, message in messages %}
+                <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</main>
+{% endblock %}

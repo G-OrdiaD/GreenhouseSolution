@@ -46,13 +46,13 @@ def insert_sensor_data(data):
 
         # Insert the new sensor data
         cursor.execute(query_insert, (
-            data['temperature'],
-            data['pressure'],
-            data['light_intensity'],
-            data['humidity'],
-            data['air_quality'],
-            data['pH'],
-            data['moisture']
+            data.get('temperature'),
+            data.get('pressure'),
+            data.get('light_intensity'),
+            data.get('humidity'),
+            data.get('air_quality'),
+            data.get('pH'),
+            data.get('moisture')
         ))
         conn.commit()
 
@@ -62,48 +62,16 @@ def insert_sensor_data(data):
 
         timestamp = datetime.now()
 
-        # Check for alerts
-        if 'temperature' in data and 'temperature' in thresholds:
-            if data['temperature'] < thresholds['temperature']['min']:
-                cursor.execute(query_insert_alert, (timestamp, 'temperature', data['temperature'], 'min', thresholds['temperature']['min']))
-            elif data['temperature'] > thresholds['temperature']['max']:
-                cursor.execute(query_insert_alert, (timestamp, 'temperature', data['temperature'], 'max', thresholds['temperature']['max']))
+        # Iterate through the sensor data and check against thresholds
+        for sensor_type, reading in data.items():
+            if sensor_type in thresholds:
+                min_threshold = thresholds[sensor_type]['min']
+                max_threshold = thresholds[sensor_type]['max']
 
-        if 'pressure' in data and 'pressure' in thresholds:
-            if data['pressure'] < thresholds['pressure']['min']:
-                cursor.execute(query_insert_alert, (timestamp, 'pressure', data['pressure'], 'min', thresholds['pressure']['min']))
-            elif data['pressure'] > thresholds['pressure']['max']:
-                cursor.execute(query_insert_alert, (timestamp, 'pressure', data['pressure'], 'max', thresholds['pressure']['max']))
-
-        if 'light_intensity' in data and 'light_intensity' in thresholds:
-            if data['light_intensity'] < thresholds['light_intensity']['min']:
-                cursor.execute(query_insert_alert, (timestamp, 'light_intensity', data['light_intensity'], 'min', thresholds['light_intensity']['min']))
-            elif data['light_intensity'] > thresholds['light_intensity']['max']:
-                cursor.execute(query_insert_alert, (timestamp, 'light_intensity', data['light_intensity'], 'max', thresholds['light_intensity']['max']))
-
-        if 'humidity' in data and 'humidity' in thresholds:
-            if data['humidity'] < thresholds['humidity']['min']:
-                cursor.execute(query_insert_alert, (timestamp, 'humidity', data['humidity'], 'min', thresholds['humidity']['min']))
-            elif data['humidity'] > thresholds['humidity']['max']:
-                cursor.execute(query_insert_alert, (timestamp, 'humidity', data['humidity'], 'max', thresholds['humidity']['max']))
-
-        if 'air_quality' in data and 'air_quality' in thresholds:
-            if data['air_quality'] < thresholds['air_quality']['min']:
-                cursor.execute(query_insert_alert, (timestamp, 'air_quality', data['air_quality'], 'min', thresholds['air_quality']['min']))
-            elif data['air_quality'] > thresholds['air_quality']['max']:
-                cursor.execute(query_insert_alert, (timestamp, 'air_quality', data['air_quality'], 'max', thresholds['air_quality']['max']))
-
-        if 'pH' in data and 'pH' in thresholds:
-            if data['pH'] < thresholds['pH']['min']:
-                cursor.execute(query_insert_alert, (timestamp, 'pH', data['pH'], 'min', thresholds['pH']['min']))
-            elif data['pH'] > thresholds['pH']['max']:
-                cursor.execute(query_insert_alert, (timestamp, 'pH', data['pH'], 'max', thresholds['pH']['max']))
-
-        if 'moisture' in data and 'moisture' in thresholds:
-            if data['moisture'] < thresholds['moisture']['min']:
-                cursor.execute(query_insert_alert, (timestamp, 'moisture', data['moisture'], 'min', thresholds['moisture']['min']))
-            elif data['moisture'] > thresholds['moisture']['max']:
-                cursor.execute(query_insert_alert, (timestamp, 'moisture', data['moisture'], 'max', thresholds['moisture']['max']))
+                if reading < min_threshold:
+                    cursor.execute(query_insert_alert, (timestamp, sensor_type, reading, 'min', min_threshold))
+                elif reading > max_threshold:
+                    cursor.execute(query_insert_alert, (timestamp, sensor_type, reading, 'max', max_threshold))
 
         conn.commit()
 

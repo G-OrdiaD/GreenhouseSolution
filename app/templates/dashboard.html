@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<main>
-    <h1>DASHBOARD</h1>
-
-    <nav>
-        <a href="{{ url_for('dashboard') }}" class="nav-button">Dashboard</a>
+<header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div style="display: flex; gap: 20px;">
         <a href="{{ url_for('history') }}" class="nav-button">View Historical Data</a>
-        <a href="{{ url_for('settings') }}" class="nav-button">Alert Settings</a> </nav>
+        <a href="{{ url_for('alert_settings') }}" class="nav-button">Alert Settings</a>
+        {% if session['role'] == 'Manager' %}
+        <a href="{{ url_for('greenhouses') }}" class="nav-button">Manage Greenhouses</a>
+        <a href="{{ url_for('manage_assignments') }}" class="nav-button">Manage Employee Assignments</a>
+        {% endif %}
+    </div>
+    <a href="{{ url_for('logout') }}" class="nav-button" style="margin-left: auto;">Logout</a>
+</header>
+<main>
+    <h1 style="text-align: center;">DASHBOARD</h1>
 
     <section class="latest-data">
         <h2>Current Sensor Data</h2>

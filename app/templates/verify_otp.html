@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<main>
+    <h1>Verify OTP</h1>
+    <form method="POST">
+        <div>
+            <label for="otp">6-digit OTP:</label>
+            <input type="text" id="otp" name="otp" 
+                   placeholder="123456" required>
+        </div>
+        <button type="submit">Verify</button>
+    </form>
+    <p><a href="{{ url_for('reset_password_request') }}">Resend OTP</a></p>
+</main>
+{% endblock %}
