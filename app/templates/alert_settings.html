@@ -5,30 +5,27 @@
 
     {% if thresholds %}
     <form method="POST">
+        {{ form.hidden_tag() }}
         <table>
             <thead>
-                <tr>
-                    <th>Sensor</th>
-                    <th>Minimum Threshold</th>
-                    <th>Maximum Threshold</th>
-                </tr>
+            <tr>
             </thead>
-            <tbody>
-                {% for parameter, threshold in thresholds.items() %}
-                <tr>
-                    <td>{{ parameter|capitalize }}</td>
-                    <td>
-                        <input type="number" step="any" name="{{ parameter }}_min" value="{{ threshold.min_value }}">
-                    </td>
-                    <td>
-                        <input type="number" step="any" name="{{ parameter }}_max" value="{{ threshold.max_value }}">
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <button type="submit">Save Changes</button>
-    </form>
+        <tbody>
+            {% for parameter, threshold in thresholds.items() %}
+            <tr>
+                <td>{{ parameter|capitalize }}</td>
+                <td>
+                    <input type="number" step="any" name="{{ parameter }}_min" value="{{ threshold.min_value }}">
+                </td>
+                <td>
+                    <input type="number" step="any" name="{{ parameter }}_max" value="{{ threshold.max_value }}">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit">Save Changes</button>
+</form>
     {% else %}
     <p>No threshold settings found.</p>
     {% endif %}

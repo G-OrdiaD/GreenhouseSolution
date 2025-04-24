@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <div style="display: flex; gap: 20px;">
-        <a href="{{ url_for('history') }}" class="nav-button">View Historical Data</a>
-        <a href="{{ url_for('alert_settings') }}" class="nav-button">Alert Settings</a>
-        {% if session['role'] == 'Manager' %}
-        <a href="{{ url_for('greenhouses') }}" class="nav-button">Manage Greenhouses</a>
-        <a href="{{ url_for('manage_assignments') }}" class="nav-button">Manage Employee Assignments</a>
-        {% endif %}
-    </div>
-    <a href="{{ url_for('logout') }}" class="nav-button" style="margin-left: auto;">Logout</a>
-</header>
 <main>
-    <h1 style="text-align: center;">DASHBOARD</h1>
+    <h1 class="dashboard-title">DASHBOARD</h1>
 
     <section class="latest-data">
         <h2>Current Sensor Data</h2>
@@ -35,8 +24,8 @@
                     <td>{{ data.humidity if data and 'humidity' in data else '--' }} %</td>
                     <td>{{ data.light_intensity if data and 'light_intensity' in data else '--' }} lux</td>
                     <td>{{ data.pressure if data and 'pressure' in data else '--' }} hPa</td>
-                    <td>{{ data.air_quality if data and 'air_quality' in data else '--' }} scale</td>
-                    <td>{{ data.pH if data and 'pH' in data else '--' }} acidity</td>
+                    <td>{{ data.air_quality if data and 'air_quality' in data else '--' }} ppm</td>
+                    <td>{{ data.pH if data and 'pH' in data else '--' }} level</td>
                     <td>{{ data.moisture if data and 'moisture' in data else '--' }} %</td>
                     <td>{{ data.timestamp if data and 'timestamp' in data else '--' }}</td>
                 </tr>
@@ -44,7 +33,7 @@
         </table>
     </section>
 
-    <section class="active-alerts">
+    <section class="active-alerts" aria-live="polite">
         <h2>Active Alerts</h2>
         {% if alerts %}
         <ul>
@@ -59,7 +48,7 @@
                 {% endif %}
                 at {{ alert.timestamp }}
                 {% if alert.status %}
-                <span class="alert-status {{ alert.status|lower }}">{{ alert.status|capitalize }}</span>
+                <span class="alert-status {{ alert.status|lower|replace(' ', '-') }}">{{ alert.status|capitalize }}</span>
                 {% endif %}
             </li>
             {% endfor %}
@@ -68,6 +57,5 @@
         <p>No active alerts reported.</p>
         {% endif %}
     </section>
-
 </main>
 {% endblock %}

@@ -5,14 +5,46 @@
     <div class="filter-container">
         <form method="get">
             <label for="start_date">From:</label>
-            <input type="date" id="start_date" name="start" value="{{ start_date or '' }}" max="{{ datetime.now().strftime('%Y-%m-%d') }}">
+            <input type="date" id="start_date" name="start" value="{{ start_date or '' }}" max="{{ now().strftime('%Y-%m-%d') }}">
             <label for="end_date">To:</label>
-            <input type="date" id="end_date" name="end" value="{{ end_date or '' }}" max="{{ datetime.now().strftime('%Y-%m-%d') }}">
+            <input type="date" id="end_date" name="end" value="{{ end_date or '' }}" max="{{ now().strftime('%Y-%m-%d') }}">
             <button type="submit">Apply Filter</button>
         </form>
     </div>
 
     {% if data %}
+    <h2>Raw Historical Data</h2>
+    <div class="table-container">
+        <table id="historicalDataTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Date</th>
+                    <th>Avg Temperature (°C)</th>
+                    <th>Avg Pressure (hPa)</th>
+                    <th>Avg pH Level</th>
+                    <th>Avg Humidity (%)</th>
+                    <th>Avg Light (Lux)</th>
+                    <th>Avg Air Quality (ppm)</th>
+                    <th>Avg Moisture (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.avg_temp }}</td>
+                    <td>{{ item.avg_pressure }}</td>
+                    <td>{{ item.avg_ph }}</td>
+                    <td>{{ item.avg_humidity }}</td>
+                    <td>{{ item.avg_light }}</td>
+                    <td>{{ item.avg_air_quality }}</td>
+                    <td>{{ item.avg_moisture }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <div class="chart-grid">
         <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -40,14 +72,11 @@
     <p>No historical data available for the selected date range.</p>
     {% endif %}
 
-    <div class="back-button-container">
-        <a href="{{ url_for('dashboard') }}" class="nav-button">Back to Dashboard</a>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
     <script>
         renderCharts({{ data|tojson }});
     </script>
+    <script src="{{ url_for('static', filename='js/sort_table.js') }}"></script>
 </main>
 {% endblock %}

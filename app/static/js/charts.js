@@ -1,41 +1,45 @@
 function renderCharts(data) {
+    if (!data || data.length === 0) return;
+
     const dates = data.map(item => item.date);
 
     // Temperature Chart
-    createChart('tempChart', 'Temperature (°C)',
+    createChart('tempChart', 'Temperature (°C)', dates,
                data.map(item => item.avg_temp), '#4CAF50');
 
     // Pressure Chart
-    createChart('pressureChart', 'Pressure (hPa)',
+    createChart('pressureChart', 'Pressure (hPa)', dates,
                data.map(item => item.avg_pressure), '#3F51B5');
 
-    // pH Chart (Note capital pH)
-    createChart('phChart', 'pH Level',
+    // pH Chart
+    createChart('phChart', 'pH Level', dates,
                data.map(item => item.avg_ph), '#008080');
 
     // Humidity Chart
-    createChart('humidityChart', 'Humidity (%)',
+    createChart('humidityChart', 'Humidity (%)', dates,
                data.map(item => item.avg_humidity), '#2196F3');
 
     // Light Intensity Chart
-    createChart('lightChart', 'Light Intensity (Lux)',
+    createChart('lightChart', 'Light Intensity (Lux)', dates,
                data.map(item => item.avg_light), '#FFC107');
 
     // Air Quality Chart
-    createChart('airQualityChart', 'Air Quality (ppm)',
+    createChart('airQualityChart', 'Air Quality (ppm)', dates,
                data.map(item => item.avg_air_quality), '#9C27B0');
 
     // Moisture Chart
-    createChart('moistureChart', 'Moisture (%)',
+    createChart('moistureChart', 'Moisture (%)', dates,
                data.map(item => item.avg_moisture), '#795548');
 }
 
-function createChart(elementId, label, data, color) {
-    const dates = data.map(item => item.date); // Ensure dates are available within this scope
-    new Chart(document.getElementById(elementId), {
+function createChart(elementId, label, labels, data, color) {
+    const ctx = document.getElementById(elementId);
+    if (!ctx) return;
+
+    new Chart(ctx, {
         type: 'line',
         data: {
-            labels: dates,
+            labels: labels,
             datasets: [{
                 label: label,
                 data: data,
@@ -48,12 +52,13 @@ function createChart(elementId, label, data, color) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
                     beginAtZero: false,
                     title: {
                         display: true,
-                        text: label.split('(')[0].trim() // Extract unitless label for y-axis
+                        text: label.split('(')[0].trim()
                     }
                 },
                 x: {
@@ -69,7 +74,7 @@ function createChart(elementId, label, data, color) {
                     text: label
                 },
                 legend: {
-                    display: false // Hide the dataset label as it's redundant with the chart title
+                    display: false
                 }
             }
         }

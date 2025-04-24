@@ -11,34 +11,37 @@
             </ul>
         {% endif %}
     {% endwith %}
-    <form method="POST" action="{{ url_for('manage_assignments') }}">
+
+    {% if current_greenhouse_id %}
+        <h2>Assign Employees to Greenhouse ID: {{ current_greenhouse_id }}</h2>
+    <form method="POST" action="{{ url_for('manage_assignments', greenhouse_id=current_greenhouse_id) }}">
+    {{ form.hidden_tag() }}
         <div>
-            <h2>Assign Employees to Greenhouses</h2>
-            {% if employees and greenhouses %}
+        {% if employees and greenhouses %}
+            <h3>Employees</h3>
+            <ul>
                 {% for employee in employees %}
-                    <h3>{{ employee.username }}</h3>
-                    <ul>
-                        {% for greenhouse in greenhouses %}
-                            <li>
-                                <label>
-                                    <input type="checkbox" name="assignments" value="{{ employee.id }}-{{ greenhouse.id }}"
-                                           {% if (employee.id, greenhouse.id) in assignments %}checked{% endif %}>
-                                    {{ greenhouse.name }}
-                                </label>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    <li>
+                        <label>
+                            <input type="checkbox" name="employees" value="{{ employee.id }}"
+                                   {% if employee.id in assigned_employees %}checked{% endif %}>
+                            {{ employee.username }}
+                        </label>
+                    </li>
                 {% endfor %}
-                <button type="submit" class="button">Update Assignments</button>
-            {% elif not employees %}
-                <p>No employees found.</p>
-            {% elif not greenhouses %}
-                <p>No greenhouses found.</p>
-            {% else %}
-                <p>No employees or greenhouses found.</p>
-            {% endif %}
-        </div>
+            </ul>
+            <button type="submit" class="button">Update Assignments</button>
+        {% elif not employees %}
+            <p>No employees found.</p>
+        {% else %}
+            <p>No greenhouses found.</p>
+        {% endif %}
+    </div>
     </form>
+    {% else %}
+        <p>Please select a greenhouse from the <a href="{{ url_for('greenhouses') }}">Greenhouses</a> page to manage assignments.</p>
+    {% endif %}
+
     <div class="back-button-container">
         <a href="{{ url_for('greenhouses') }}" class="nav-button">Back to Greenhouses</a>
     </div>

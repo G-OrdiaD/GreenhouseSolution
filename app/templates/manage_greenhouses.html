@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <main>
+    <h1>Add New Greenhouse</h1>
     <form method="POST" action="{{ url_for('add_greenhouse') }}" class="registration-form">
-        <h1>Manage Greenhouses</h1>
-        <h2>Add New Greenhouse</h2>
+        {{ form.hidden_tag() }}
         <div>
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required>
@@ -38,16 +38,17 @@
                         <td>{{ greenhouse.name }}</td>
                         <td>{{ greenhouse.location or '-' }}</td>
                         <td>{{ greenhouse.description or '-' }}</td>
-                        <td><a href="#">Manage Assignments</a></td>
+                        <td><a href="{{ url_for('manage_assignments', greenhouse_id=greenhouse.id) }}">Manage Assignments</a></td>
                     </tr>
-                {% endfor %}  </tbody>
+                {% endfor %}
+            </tbody>
         </table>
     {% else %}
         <p style="text-align: center;">No greenhouses have been added yet.</p>
     {% endif %}
 
     <div style="text-align: center; margin-top: 20px;">
-        <a href="{{ url_for('dashboard') }}" class="nav-button">Back to Dashboard</a>
+        <a href="{{ url_for('greenhouses') }}" class="nav-button">Back to Greenhouses</a>
     </div>
 
     {% if messages %}

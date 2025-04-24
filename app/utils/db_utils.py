@@ -1,8 +1,11 @@
+import json
 import os
-import mysql.connector
-from mysql.connector import Error, pooling
 import random
 from datetime import datetime
+import mysql.connector
+from mysql.connector import Error, pooling
+from flask import current_app
+from flask_login import UserMixin
 
 connection_pool = None
 
@@ -27,87 +30,141 @@ def get_db_connection():
     return connection_pool.get_connection()
 
 
+class AnonymousUser(UserMixin):
+    def __init__(self, id, username, role):
+        self.id = id
+        self.username = username
+        self.role = role
+
+    def is_active(self):
+        return True
+
+    def is_authenticated(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
+
+def load_user(user_id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, username, role FROM users WHERE id = %s", (user_id,))
+        user_data = cursor.fetchone()
+        conn.close()
+        if user_data:
+            return AnonymousUser(**user_data)
+    return None
+
+
 def insert_sensor_data(data):
-    """Inserts sensor data into MySQL and checks for alerts."""
-    query_insert = """
-    INSERT INTO sensor_readings
-    (temperature, pressure, light_intensity, humidity, air_quality, pH, moisture)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """
-    query_thresholds = "SELECT parameter, min_value, max_value FROM optimal_ranges"
-    query_insert_alert = """
-    INSERT INTO alerts (timestamp, sensor_type, reading_value, threshold_type, threshold_value)
-    VALUES (%s, %s, %s, %s, %s)
-    """
     conn = None
+    alerts_triggered = []
+
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
-        # Insert the new sensor data
-        cursor.execute(query_insert, (
-            data.get('temperature'),
-            data.get('pressure'),
-            data.get('light_intensity'),
-            data.get('humidity'),
-            data.get('air_quality'),
-            data.get('pH'),
-            data.get('moisture')
-        ))
+        # Insert sensor data (keep your existing code)
+        cursor.execute("""
+            INSERT INTO sensor_readings (...) VALUES (...)
+        """, (...))
+
+        # Get thresholds
+        cursor.execute("SELECT parameter, min_value, max_value FROM optimal_ranges")
+        thresholds = {row['parameter']: row for row in cursor.fetchall()}
+
+        # Check all 7 sensors
+        for param in ['temperature', 'humidity', 'light_intensity',
+                      'pressure', 'air_quality', 'pH', 'moisture']:
+            value = data.get(param)
+            if value is None:
+                continue
+
+            if param in thresholds:
+                min_val = thresholds[param]['min_value']
+                max_val = thresholds[param]['max_value']
+
+                # Check min threshold
+                if min_val is not None and value < min_val:
+                    alert_msg = f"{param} too low ({value} < {min_val})"
+                    cursor.execute("""
+                        INSERT INTO alerts (
+                            message, timestamp, sensor_type,
+                            reading_value, threshold_type,
+                            threshold_value, status
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        alert_msg,
+                        data['timestamp'],
+                        param,
+                        float(value),
+                        'min',
+                        float(min_val),
+                        'Open'
+                    ))
+                    alerts_triggered.append(alert_msg)
+
+                # Check max threshold
+                if max_val is not None and value > max_val:
+                    alert_msg = f"{param} too high ({value} > {max_val})"
+                    cursor.execute("""
+                        INSERT INTO alerts (
+                            message, timestamp, sensor_type,
+                            reading_value, threshold_type,
+                            threshold_value, status
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        alert_msg,
+                        data['timestamp'],
+                        param,
+                        float(value),
+                        'max',
+                        float(max_val),
+                        'Open'
+                    ))
+                    alerts_triggered.append(alert_msg)
+
         conn.commit()
-
-        # Fetch current thresholds
-        cursor.execute(query_thresholds)
-        thresholds = {row['parameter']: {'min': row['min_value'], 'max': row['max_value']} for row in cursor.fetchall()}
-
-        timestamp = datetime.now()
-
-        # Iterate through the sensor data and check against thresholds
-        for sensor_type, reading in data.items():
-            if sensor_type in thresholds:
-                min_threshold = thresholds[sensor_type]['min']
-                max_threshold = thresholds[sensor_type]['max']
-
-                if reading < min_threshold:
-                    cursor.execute(query_insert_alert, (timestamp, sensor_type, reading, 'min', min_threshold))
-                elif reading > max_threshold:
-                    cursor.execute(query_insert_alert, (timestamp, sensor_type, reading, 'max', max_threshold))
-
-        conn.commit()
+        return alerts_triggered
 
     except Error as e:
         if conn:
             conn.rollback()
-        raise RuntimeError(f"Failed to insert data or check alerts: {e}")
+        current_app.logger.error(f"Database error: {e}")
+        raise RuntimeError(f"Failed to process sensor data: {e}")
     finally:
         if conn and conn.is_connected():
-            cursor.close()
             conn.close()
 
-
 def simulate_sensor_data():
-    """Generates fake sensor data for testing"""
-    return {
-        'timestamp': datetime.now(),
-        'temperature': round(random.uniform(20, 30), 2),
-        'pressure': round(random.uniform(1000, 1010), 2),
-        'light_intensity': random.randint(500, 1000),
-        'humidity': round(random.uniform(40, 60), 2),
-        'air_quality': random.randint(0, 100),
-        'pH': round(random.uniform(6, 8), 1),
-        'moisture': round(random.uniform(20, 80), 2)
+    data = {
+        'timestamp': datetime.now().isoformat() + 'Z',  # Format timestamp as ISO with UTC Zulu time
+        'temperature': round(random.uniform(15, 25), 2),
+        'pressure': round(random.uniform(1005, 1015), 2),
+        'light_intensity': random.randint(550, 1250),
+        'humidity': round(random.uniform(30, 65), 2),
+        'air_quality': random.randint(30, 110),
+        'pH': round(random.uniform(5.0, 7.5), 1),
+        'moisture': round(random.uniform(35, 75), 2)
     }
+    json_payload = json.dumps(data)
+    print(f"Simulated JSON Payload: {json_payload}")
+    return data  # Return the dictionary as your function currently does
 
 
 def get_historical_data(start_date, end_date):
-    """Fetch ALL sensor metrics with proper pH capitalization"""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         query = """
-        SELECT 
+        SELECT
             DATE(timestamp) as date,
             AVG(temperature) as avg_temp,
             AVG(pressure) as avg_pressure,
@@ -126,4 +183,5 @@ def get_historical_data(start_date, end_date):
         return cursor.fetchall()
     finally:
         if conn and conn.is_connected():
+            cursor.close()
             conn.close()

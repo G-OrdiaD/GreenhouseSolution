@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+    <h1>Error</h1>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% else %}
+        <p>An unexpected error occurred.</p>
+    {% endif %}
+    <div class="back-button-container">
+        <a href="{{ url_for('dashboard') }}" class="nav-button">Back to Dashboard</a>
+    </div>
+</main>
+{% endblock %}

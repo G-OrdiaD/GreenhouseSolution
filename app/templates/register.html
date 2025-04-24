@@ -1,39 +1,56 @@
 {% extends "base.html" %}
+
 {% block content %}
-<main>
-    <form method="POST" action="{{ url_for('register') }}" class="registration-form">
-        <h1>User Registration</h1>
-        <div>
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-        </div>
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div>
-            <label for="phone_number">Phone Number:</label>
-            <input type="tel" id="phone_number" name="phone_number" required>
-        </div>
-        <div>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <div>
-            <label for="confirm_password">Confirm Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-        </div>
-        <button type="submit">Register</button>
-        <div class="links">
-            <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
-        </div>
-    </form>
-    {% if messages %}
-        <div class="messages">
-            {% for category, message in messages %}
-                <div class="{{ category }}">{{ message }}</div>
+<div class="auth-container">
+    <h2>User Registration</h2>
+    <form class="auth-form" method="POST" action="{{ url_for('register') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            <label for="{{ form.username.id }}">{{ form.username.label }}</label>
+            {{ form.username(class="form-control", id=form.username.id) }}
+            {% for error in form.username.errors %}
+            <span class="error-message">{{ error }}</span>
             {% endfor %}
         </div>
-    {% endif %}
-</main>
+
+        <div class="form-group">
+            <label for="{{ form.email.id }}">{{ form.email.label }}</label>
+            {{ form.email(class="form-control", id=form.email.id) }}
+            {% for error in form.email.errors %}
+            <span class="error-message">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.phone_number.id }}">{{ form.phone_number.label }}</label>
+            {{ form.phone_number(class="form-control", id=form.phone_number.id) }}
+            {% for error in form.phone_number.errors %}
+            <span class="error-message">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.password.id }}">{{ form.password.label }}</label>
+            {{ form.password(class="form-control", id=form.password.id) }}
+            {% for error in form.password.errors %}
+            <span class="error-message">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.confirm_password.id }}">{{ form.confirm_password.label }}</label>
+            {{ form.confirm_password(class="form-control", id=form.confirm_password.id) }}
+            {% for error in form.confirm_password.errors %}
+            <span class="error-message">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        {{ form.submit(class="btn-submit") }}
+
+        <div class="form-links">
+            <span>Already have an account? <a href="{{ url_for('login') }}">Log in</a></span>
+        </div>
+    </form>
+</div>
 {% endblock %}

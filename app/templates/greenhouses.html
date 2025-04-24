@@ -28,7 +28,8 @@
                         <td>{{ greenhouse.name }}</td>
                         <td>{{ greenhouse.location or '-' }}</td>
                         <td>{{ greenhouse.description or '-' }}</td>
-                        <td><a href="#">Manage Assignments</a></td> </tr>
+                        <td><a href="{{ url_for('manage_assignments', greenhouse_id=greenhouse.id) }}">Manage Assignments</a></td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>

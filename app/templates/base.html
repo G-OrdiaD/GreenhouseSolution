@@ -7,6 +7,54 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
-    {% block content %}{% endblock %}
+    <header>
+        {% if request.endpoint not in ['login', 'register', 'reset_password_request', 'verify_otp', 'reset_password'] %}
+        <nav class="main-nav">
+            <ul>
+                {% if request.endpoint != 'dashboard' %}
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('history') }}">View Historical Data</a></li>
+                <li><a href="{{ url_for('settings') }}">Alert Settings</a></li>
+                <li><a href="{{ url_for('greenhouses') }}">Manage Greenhouses</a></li>
+                <li><a href="{{ url_for('manage_assignments') }}">Manage Employees Assignments</a></li>
+            </ul>
+        </nav>
+        <nav class="logout-nav">
+            <ul>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+        {% endif %}
+    </header>
+    <div class="container">
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        <footer>
+            {% block footer %}{% endblock %}
+        </footer>
+    </div>
+
+    {% if request.endpoint not in ['login', 'register', 'reset_password_request', 'verify_otp', 'reset_password'] %}
+    <button id="feedback-button" aria-label="Open feedback form">Feedback</button>
+
+    <div id="feedback-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <button class="close-button" aria-label="Close modal">&times;</button>
+            <h2 id="modal-title">Submit Feedback</h2>
+            <form id="feedback-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="feedback-text">Your Feedback:</label>
+                <textarea id="feedback-text" name="feedback" rows="5" required></textarea>
+                <button type="submit">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+{% if csrf_token %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% endif %}
+    <script src="{{ url_for('static', filename='js/scripts.js') }}" defer></script>
 </body>
 </html>

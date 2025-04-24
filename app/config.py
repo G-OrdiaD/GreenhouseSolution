@@ -1,14 +1,14 @@
 import os
-from dotenv import load_dotenv
 from warnings import warn
+from dotenv import load_dotenv
 from twilio.rest import Client
 
 # Load environment variables from .env file first
 load_dotenv()
 
+
 class Config:
-    # Security (Required)
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-only-fallback-key'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'db54ad4cb4f608f23ff039948ac83364cedd4e6e8c601badcec8fe70f79ececc'
 
     # Database Configuration
     MYSQL_HOST = os.environ.get('MYSQL_HOST', 'localhost')
