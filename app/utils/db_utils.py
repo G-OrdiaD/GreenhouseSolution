@@ -1,5 +1,4 @@
 import json
-import os
 import random
 from datetime import datetime
 import mysql.connector
@@ -78,7 +77,7 @@ def insert_sensor_data(data):
         cursor.execute("SELECT parameter, min_value, max_value FROM optimal_ranges")
         thresholds = {row['parameter']: row for row in cursor.fetchall()}
 
-        # Check all 7 sensors
+
         for param in ['temperature', 'humidity', 'light_intensity',
                       'pressure', 'air_quality', 'pH', 'moisture']:
             value = data.get(param)

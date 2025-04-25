@@ -60,7 +60,7 @@ def register():
 
         username = form.username.data
         email = form.email.data
-        phone_number = form.phone_number.data # Corrected line
+        phone_number = form.phone_number.data
         password = form.password.data
 
         conn = None
@@ -275,10 +275,7 @@ def dashboard():
             LIMIT 10
         """)
         alerts = cursor.fetchall()
-
-        return render_template('dashboard.html',
-                               data=latest_data,
-                               alerts=alerts)
+        return render_template('dashboard.html', data=latest_data, alerts=alerts)
 
     except Exception as e:
         current_app.logger.error(f"Dashboard error: {e}")
@@ -371,7 +368,7 @@ def settings():
             return redirect(url_for('settings'))
         cursor.execute("SELECT * FROM optimal_ranges")
         thresholds = {row['parameter']: row for row in cursor.fetchall()}
-        return render_template('alert_settings.html', thresholds=thresholds, form=form) # Pass the form
+        return render_template('alert_settings.html', thresholds=thresholds, form=form)
     except Exception as e:
         app.logger.error(f"Settings error: {e}")
         flash('Failed to update settings', 'error')
@@ -500,18 +497,6 @@ def latest_sensor_data():
             conn.close()
 
 
-# --- Define Alert Thresholds ---
-ALERT_THRESHOLDS = {
-    'temperature': {'min': 10.0, 'max': 35.0},
-    'humidity': {'min': 30.0, 'max': 80.0},
-    'light_intensity': {'min': 100.0, 'max': 1500.0},
-    'pressure': {'min': 950.0, 'max': 1050.0},
-    'air_quality': {'min': 10, 'max': 50.0},
-    'pH': {'min': 5.5, 'max': 7.5},
-    'moisture': {'min': 20.0, 'max': 70.0},
-}
-
-
 # Add this decorator above your API route
 @app.route('/receive_sensor_data', methods=['POST'])
 def receive_sensor_data():
@@ -521,8 +506,7 @@ def receive_sensor_data():
     try:
         data = request.get_json()
         required_sensors = [
-            'temperature', 'humidity', 'light_intensity',
-            'pressure', 'air_quality', 'pH', 'moisture'
+            'temperature', 'humidity', 'light_intensity', 'pressure', 'air_quality', 'pH', 'moisture'
         ]
 
         for sensor in required_sensors:
@@ -572,6 +556,31 @@ def send_alert_sms(alert_message):
         if conn and conn.is_connected():
             conn.close()
 
+@app.route('/alerts')
+def get_alerts():
+    """Returns the latest active alerts as JSON."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT
+                sensor_type, reading_value,
+                threshold_type, threshold_value,
+                timestamp, status, message
+            FROM alerts
+            WHERE status != 'Resolved'
+            ORDER BY timestamp DESC
+            LIMIT 10
+        """)
+        alerts = cursor.fetchall()
+        return jsonify(alerts)
+    except Exception as e:
+        app.logger.error(f"Error fetching alerts: {e}")
+        return jsonify({'error': 'Failed to fetch alerts'}), 500
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
 
 # ERROR HANDLERS
 @app.errorhandler(403)

@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function fetchLatestData() {
-    fetch('/latest_sensor_data') // Replace with your actual endpoint to get latest data
+    fetch('/latest_sensor_data')
         .then(response => response.json())
         .then(data => {
             if (data) {
@@ -80,8 +80,8 @@ function fetchLatestData() {
                 document.querySelector('.latest-data table tbody tr td:nth-child(2)').textContent = (data.humidity || '--') + ' %';
                 document.querySelector('.latest-data table tbody tr td:nth-child(3)').textContent = (data.light_intensity || '--') + ' lux';
                 document.querySelector('.latest-data table tbody tr td:nth-child(4)').textContent = (data.pressure || '--') + ' hPa';
-                document.querySelector('.latest-data table tbody tr td:nth-child(5)').textContent = (data.air_quality || '--') + ' scale';
-                document.querySelector('.latest-data table tbody tr td:nth-child(6)').textContent = (data.pH || '--') + ' acidity';
+                document.querySelector('.latest-data table tbody tr td:nth-child(5)').textContent = (data.air_quality || '--') + ' ppm';
+                document.querySelector('.latest-data table tbody tr td:nth-child(6)').textContent = (data.pH || '--') + ' level';
                 document.querySelector('.latest-data table tbody tr td:nth-child(7)').textContent = (data.moisture || '--') + ' %';
                 document.querySelector('.latest-data table tbody tr td:nth-child(8)').textContent = data.timestamp || '--';
             }
@@ -91,11 +91,9 @@ function fetchLatestData() {
         });
 }
 
-// Fetch data initially
 fetchLatestData();
 
-// Fetch data every 5 seconds (adjust as needed)
-setInterval(fetchLatestData, 5000);
+setInterval(fetchLatestData, 60000);
 
 function fetchActiveAlerts() {
     fetch('/alerts')
@@ -126,8 +124,6 @@ function fetchActiveAlerts() {
         });
 }
 
-// Fetch alerts initially
 fetchActiveAlerts();
 
-// Fetch alerts every 5 seconds (adjust as needed)
-setInterval(fetchActiveAlerts, 5000);
+setInterval(fetchActiveAlerts, 60000);
