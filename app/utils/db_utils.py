@@ -68,15 +68,23 @@ def insert_sensor_data(data):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Insert sensor data (keep your existing code)
         cursor.execute("""
-            INSERT INTO sensor_readings (...) VALUES (...)
-        """, (...))
-
+            INSERT INTO sensor_readings (timestamp, temperature, pressure, light_intensity, humidity, air_quality, pH, moisture, greenhouse_zone)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            data['timestamp'],
+            data.get('temperature'),
+            data.get('pressure'),
+            data.get('light_intensity'),
+            data.get('humidity'),
+            data.get('air_quality'),
+            data.get('pH'),
+            data.get('moisture'),
+            data.get('greenhouse_zone')
+        ))
         # Get thresholds
         cursor.execute("SELECT parameter, min_value, max_value FROM optimal_ranges")
         thresholds = {row['parameter']: row for row in cursor.fetchall()}
-
 
         for param in ['temperature', 'humidity', 'light_intensity',
                       'pressure', 'air_quality', 'pH', 'moisture']:
@@ -88,44 +96,24 @@ def insert_sensor_data(data):
                 min_val = thresholds[param]['min_value']
                 max_val = thresholds[param]['max_value']
 
+                current_app.logger.info(f"Checking {param}: value={value}, min={min_val}, max={max_val}") # Added logging
+
                 # Check min threshold
                 if min_val is not None and value < min_val:
                     alert_msg = f"{param} too low ({value} < {min_val})"
                     cursor.execute("""
-                        INSERT INTO alerts (
-                            message, timestamp, sensor_type,
-                            reading_value, threshold_type,
-                            threshold_value, status
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        alert_msg,
-                        data['timestamp'],
-                        param,
-                        float(value),
-                        'min',
-                        float(min_val),
-                        'Open'
-                    ))
+                        INSERT INTO alerts (message, timestamp, sensor_type, reading_value, threshold_type, threshold_value, status)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (alert_msg, data['timestamp'], param, float(value), 'min', float(min_val), 'Open'))
                     alerts_triggered.append(alert_msg)
 
                 # Check max threshold
                 if max_val is not None and value > max_val:
                     alert_msg = f"{param} too high ({value} > {max_val})"
                     cursor.execute("""
-                        INSERT INTO alerts (
-                            message, timestamp, sensor_type,
-                            reading_value, threshold_type,
-                            threshold_value, status
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        alert_msg,
-                        data['timestamp'],
-                        param,
-                        float(value),
-                        'max',
-                        float(max_val),
-                        'Open'
-                    ))
+                        INSERT INTO alerts (message, timestamp, sensor_type, reading_value, threshold_type, threshold_value, status)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (alert_msg, data['timestamp'], param, float(value), 'max', float(max_val), 'Open'))
                     alerts_triggered.append(alert_msg)
 
         conn.commit()
@@ -140,20 +128,22 @@ def insert_sensor_data(data):
         if conn and conn.is_connected():
             conn.close()
 
+
 def simulate_sensor_data():
     data = {
-        'timestamp': datetime.now().isoformat() + 'Z',  # Format timestamp as ISO with UTC Zulu time
-        'temperature': round(random.uniform(15, 25), 2),
-        'pressure': round(random.uniform(1005, 1015), 2),
-        'light_intensity': random.randint(550, 1250),
-        'humidity': round(random.uniform(30, 65), 2),
-        'air_quality': random.randint(30, 110),
-        'pH': round(random.uniform(5.0, 7.5), 1),
-        'moisture': round(random.uniform(35, 75), 2)
+        'timestamp': datetime.now().isoformat() + 'Z',
+        'temperature': round(random.uniform(10, 50), 2),  # WIDER RANGE
+        'pressure': round(random.uniform(980, 1030), 2),  # WIDER RANGE
+        'light_intensity': random.randint(200, 1500),  # Wider
+        'humidity': round(random.uniform(10, 90), 2),  # wider
+        'air_quality': random.randint(10, 200),  # VERY BAD air
+        'pH': round(random.uniform(3.5, 9.0), 1),  # pH extremes
+        'moisture': round(random.uniform(10, 90), 2),  # dry to soaked
+        'greenhouse_zone': random.choice(['Zone A', 'Zone B', 'Zone C'])  # Just random zones
     }
     json_payload = json.dumps(data)
     print(f"Simulated JSON Payload: {json_payload}")
-    return data  # Return the dictionary as your function currently does
+    return data
 
 
 def get_historical_data(start_date, end_date):

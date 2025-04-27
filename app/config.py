@@ -8,7 +8,7 @@ load_dotenv()
 
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'db54ad4cb4f608f23ff039948ac83364cedd4e6e8c601badcec8fe70f79ececc'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
 
     # Database Configuration
     MYSQL_HOST = os.environ.get('MYSQL_HOST', 'localhost')

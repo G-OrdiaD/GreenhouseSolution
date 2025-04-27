@@ -10,9 +10,13 @@ from itsdangerous import URLSafeTimedSerializer
 from twilio.base.exceptions import TwilioRestException
 from flask_login import current_user, login_required
 from app import app
-from app.utils.db_utils import get_db_connection, insert_sensor_data
+from app.utils.db_utils import get_db_connection, insert_sensor_data, simulate_sensor_data
 from app.forms import LoginForm, RegistrationForm, AddGreenhouseForm, AlertSettingsForm
 from twilio.rest import Client
+import json
+import requests
+from . import app
+import logging
 
 
 # HELPER FUNCTIONS
@@ -47,14 +51,16 @@ def validate_phone(phone_number):
 def require_login():
     """Ensure user is logged in for protected routes"""
     if request.endpoint in ['login', 'register', 'static', 'reset_password_request', 'verify_otp', 'reset_password']:
-        return
+        return None
     if not is_logged_in():
         return redirect(url_for('login'))
+    return None
 
 
 # AUTHENTICATION ROUTES
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    global cursor
     form = RegistrationForm()
     if form.validate_on_submit():
 
@@ -100,7 +106,7 @@ def register():
                 conn.close()
 
             print(sys.path)
-            pass
+            return None
     return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -321,6 +327,7 @@ def history():
             cursor.close()
             conn.close()
 
+
 # MANAGEMENT ROUTES
 @app.route('/greenhouses')
 @require_role(['Manager'])
@@ -447,6 +454,7 @@ def manage_assignments(greenhouse_id=None):
             cursor.close()
             conn.close()
 
+
 # API ROUTES
 @app.route('/api/submit_feedback', methods=['POST'])
 @login_required
@@ -478,6 +486,7 @@ def submit_feedback():
             cursor.close()
             conn.close()
 
+
 @app.route('/latest_sensor_data')
 def latest_sensor_data():
     """Returns the latest sensor data as JSON."""
@@ -500,36 +509,93 @@ def latest_sensor_data():
 # Add this decorator above your API route
 @app.route('/receive_sensor_data', methods=['POST'])
 def receive_sensor_data():
+    print("ENTERING /receive_sensor_data FUNCTION")
+    print(f"Request content type: {request.content_type}")
+    print(f"Request data (raw): {request.data}")
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
 
+    conn = None
     try:
         data = request.get_json()
-        required_sensors = [
-            'temperature', 'humidity', 'light_intensity', 'pressure', 'air_quality', 'pH', 'moisture'
-        ]
+        print(f"Parsed JSON data: {data}")
 
-        for sensor in required_sensors:
-            if sensor not in data:
-                return jsonify({"error": f"Missing sensor data: {sensor}"}), 400
+        # Required fields
+        required_fields = ['temperature', 'pressure', 'light_intensity', 'humidity', 'air_quality', 'pH', 'moisture', 'greenhouse_zone', 'timestamp']
+        missing_fields = [field for field in required_fields if field not in data]
 
-        # Process data and get alerts
-        alerts = insert_sensor_data(data)
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
-        # Send SMS for each alert if Twilio is configured
-        if alerts and app.twilio_client:
-            for alert in alerts:
-                send_alert_sms(alert)
+        temperature = data['temperature']
+        pressure = data['pressure']
+        light_intensity = data['light_intensity']
+        humidity = data['humidity']
+        air_quality = data['air_quality']
+        pH = data['pH']
+        moisture = data['moisture']
+        greenhouse_zone = data['greenhouse_zone']
+        timestamp = data['timestamp']
 
-        return jsonify({
-            "status": "success",
-            "alerts": alerts,
-            "sensors_received": list(data.keys())  # Verification
-        }), 201
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Insert sensor data into sensor_readings
+        cursor.execute("""
+            INSERT INTO sensor_readings (temperature, pressure, light_intensity, humidity, air_quality, pH, moisture, greenhouse_zone, timestamp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (temperature, pressure, light_intensity, humidity, air_quality, pH, moisture, greenhouse_zone, timestamp))
+        conn.commit()
+
+        # Fetch optimal ranges
+        cursor.execute("SELECT parameter, min_value, max_value FROM optimal_ranges")
+        thresholds = {row['parameter']: {'min': row['min_value'], 'max': row['max_value']} for row in cursor.fetchall()}
+
+        alerts_triggered = []
+
+        # Now check each sensor against its thresholds
+        for sensor, value in {
+            'temperature': temperature,
+            'pressure': pressure,
+            'light_intensity': light_intensity,
+            'humidity': humidity,
+            'air_quality': air_quality,
+            'pH': pH,
+            'moisture': moisture
+        }.items():
+            if sensor in thresholds:
+                min_val = thresholds[sensor]['min']
+                max_val = thresholds[sensor]['max']
+
+                # Compare with min
+                if min_val is not None and value < min_val:
+                    alert_msg = f"{sensor.capitalize()} too low ({value} < {min_val})"
+                    alerts_triggered.append(('Low ' + sensor.capitalize(), alert_msg))
+
+                # Compare with max
+                if max_val is not None and value > max_val:
+                    alert_msg = f"{sensor.capitalize()} too high ({value} > {max_val})"
+                    alerts_triggered.append(('High ' + sensor.capitalize(), alert_msg))
+
+        # Insert any triggered alerts into alerts table
+        for alert_type, description in alerts_triggered:
+            cursor.execute("""
+                INSERT INTO alerts (alert_type, description, greenhouse_zone, created_at)
+                VALUES (%s, %s, %s, NOW())
+            """, (alert_type, description, greenhouse_zone))
+        conn.commit()
+
+        return jsonify({"success": True, "alerts_triggered": len(alerts_triggered)}), 201
 
     except Exception as e:
-        app.logger.error(f"Sensor processing failed: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        app.logger.error(f"Error in receive_sensor_data: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+
 
 def send_alert_sms(alert_message):
     """Send SMS to all admins when an alert triggers."""
@@ -556,6 +622,7 @@ def send_alert_sms(alert_message):
         if conn and conn.is_connected():
             conn.close()
 
+
 @app.route('/alerts')
 def get_alerts():
     """Returns the latest active alerts as JSON."""
@@ -563,6 +630,12 @@ def get_alerts():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+
+        # Pagination logic (optional)
+        page = request.args.get('page', default=1, type=int)
+        limit = 10
+        offset = (page - 1) * limit
+
         cursor.execute("""
             SELECT
                 sensor_type, reading_value,
@@ -571,16 +644,54 @@ def get_alerts():
             FROM alerts
             WHERE status != 'Resolved'
             ORDER BY timestamp DESC
-            LIMIT 10
-        """)
+            LIMIT %s OFFSET %s
+        """, (limit, offset))
+
         alerts = cursor.fetchall()
-        return jsonify(alerts)
+
+        if not alerts:
+            app.logger.info("No active alerts found.")
+            return jsonify({"message": "No active alerts"}), 200
+
+        return jsonify({
+            "alerts": alerts,
+            "total_alerts": len(alerts),
+            "message": "Alerts fetched successfully"
+        }), 200
+
+    except mysql.connector.Error as e:
+        app.logger.error(f"Database error: {e}")
+        return jsonify({'error': 'Database error occurred'}), 500
     except Exception as e:
-        app.logger.error(f"Error fetching alerts: {e}")
+        app.logger.error(f"Unexpected error: {e}")
         return jsonify({'error': 'Failed to fetch alerts'}), 500
     finally:
         if conn and conn.is_connected():
             conn.close()
+
+
+
+@app.route('/send_mock_sensor_data', methods=['GET'])
+def send_mock_sensor_data():
+    """A temporary route to generate and send mock sensor data."""
+    from .utils.db_utils import simulate_sensor_data
+    import requests
+    sensor_data = simulate_sensor_data()
+    url = request.url_root + "receive_sensor_data"  # Construct the full URL to your endpoint
+    headers = {'Content-Type': 'application/json'}
+
+    try:
+        response = requests.post(url, headers=headers, json=sensor_data)  # Use json= instead of data=
+        return jsonify({
+            "message": "Mock sensor data sent",
+            "status_code": response.status_code,
+            "response": response.json()
+        })
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({"error": f"Could not connect to the receive_sensor_data endpoint: {e}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while sending mock data: {e}"}), 500
+
 
 # ERROR HANDLERS
 @app.errorhandler(403)
